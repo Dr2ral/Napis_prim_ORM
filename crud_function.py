@@ -54,8 +54,20 @@ def add_user(username, email, age):
     conn.commit()
 
 def is_included(username):
-    check = cursor.execute('SELECT * FROM Users')
-    if check is None:
-        cursor.execute(f'UPDATE Users SET username = {username}')
-        conn.commit()
-        conn.close()
+    connection = sqlite3.connect('not_telegram.db')
+    cursor = connection.cursor()
+    cursor.execute("""
+            CREATE TABLE IF NOT EXISTS Users(
+            id INTEGER PRIMARY KEY,
+            username TEXT NOT NULL,
+            email TEXT NOT NULL,
+            age INTEGER NOT NULL,
+            balance INTEGER NOT NULL 
+            );
+            """)
+    conn.commit()
+    s = cursor.execute('SELECT username FROM Users').fetchall()
+    connection.commit()
+    return (username,) in s
+
+

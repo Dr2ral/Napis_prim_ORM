@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.dispatcher.filters.state import State, StatesGroup
 import asyncio
-from crud_function import get_all_products, add_user
+from crud_function import get_all_products, add_user, is_included
 
 
 api = ''
@@ -144,11 +144,17 @@ async def sing_up(message):
     await message.answer("Введите имя пользователя (только латинский алфавит):")
     await RegistrationState.username.set()
 
+
 @dp.message_handler(state=RegistrationState.username)
 async def set_username(message, state):
     await state.update_data(username=message.text)
-    await message.answer("Введите свой email:")
-    await RegistrationState.email.set()
+    data = await state.get_data()
+    if is_included(data['username']):
+        await message.answer('Пользователь существует, введите другое имя')
+        await RegistrationState.username.set()
+    else:
+        await message.answer("Введите свой email:")
+        await RegistrationState.email.set()
 
 @dp.message_handler(state=RegistrationState.email)
 async def set_email(message, state):
@@ -162,7 +168,7 @@ async def set_email(message, state):
     data = await state.get_data()
     add_user(data['username'], data['email'], data['age1'])
     await message.answer('Регистрация прошла успешно!')
-
+    await state.finish()
 
 
 if __name__ == '__main__':
